@@ -211,7 +211,7 @@ client.on('messageCreate', async (message) => {
     }
 });
 
-fn stopAllTimers() {
+function stopAllTimers() {
     if (activeInterval) clearTimeout(activeInterval);
     if (currentTimeout) clearTimeout(currentTimeout);
 }
