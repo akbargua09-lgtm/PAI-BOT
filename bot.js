@@ -9,9 +9,8 @@ const client = new Client({
 });
 
 // ================= PENGATURAN =================
-// Langsung ambil token dari Environment Variable Railway secara aman
+// Token diambil secara aman dari Environment Variables Railway
 const BOT_TOKEN = process.env.BOT_TOKEN; 
-
 
 const CHANNEL_IDS = [
     "1511280356802957414", // Channel Satu
@@ -31,7 +30,7 @@ let currentChannelIndex = 0;
 let activeInterval = null;
 let currentTimeout = null;
 
-// Default Gems aktif (bisa diganti via tombol panel)
+// Default Gems aktif
 let activeGems = "guse 85 78 71 57"; 
 // ==============================================
 
@@ -45,13 +44,68 @@ client.on('messageCreate', async (message) => {
     if (message.author.bot) return;
 
     if (message.content === '!panel') {
-        sendControlPanel(message);
+        await message.reply({ 
+            embeds: [getControlPanelEmbed()], 
+            components: getControlPanelComponents() 
+        });
     }
 });
 
-// Fungsi untuk mengirim / update tampilan panel tombol
-async function sendControlPanel(target) {
-    // Baris 1: Tombol Start & Stop
+// Handle klik tombol interaktif tanpa error double reply
+client.on('interactionCreate', async (interaction) => {
+    if (!interaction.isButton()) return;
+
+    if (interaction.customId === 'start_farming') {
+        if (isFarmingActive) {
+            return interaction.reply({ content: '⚠️ Bot farming sudah dalam keadaan aktif!', ephemeral: true });
+        }
+        isFarmingActive = true;
+        
+        // Langsung jalankan siklus farming
+        startFarmingCycle();
+        
+        // Update tampilan panel
+        await interaction.update({ 
+            content: '🚀 Bot farming berhasil **DIJALANKAN**!', 
+            embeds: [getControlPanelEmbed()], 
+            components: getControlPanelComponents() 
+        });
+    } 
+    else if (interaction.customId === 'stop_farming') {
+        if (!isFarmingActive) {
+            return interaction.reply({ content: '⚠️ Bot farming memang sedang mati!', ephemeral: true });
+        }
+        isFarmingActive = false;
+        stopAllTimers();
+        
+        // Update tampilan panel
+        await interaction.update({ 
+            content: '🛑 Bot farming berhasil **DIHENTIKAN**!', 
+            embeds: [getControlPanelEmbed()], 
+            components: getControlPanelComponents() 
+        });
+    }
+    else if (interaction.customId === 'gems_fable') {
+        activeGems = "guse 85 78 71 57";
+        await interaction.reply({ content: '✨ Gems berhasil diubah ke tier **Fable** (`guse 85 78 71 57`)!', ephemeral: true });
+    }
+    else if (interaction.customId === 'gems_rare') {
+        activeGems = "guse 81 74 67 53";
+        await interaction.reply({ content: '✨ Gems berhasil diubah ke tier **Rare** (`guse 81 74 67 53`)!', ephemeral: true });
+    }
+});
+
+// Fungsi pembantu untuk Embed Panel
+function getControlPanelEmbed() {
+    return new EmbedBuilder()
+        .setTitle('🎮 GodBot Auto-Farming & Gems Control Panel')
+        .setDescription(`Status Bot: **${isFarmingActive ? '🟢 AKTIF (Jalan)' : '🔴 MATI (Berhenti)'}**\nGems Aktif Saat Ini: \`${activeGems}\``)
+        .setColor(isFarmingActive ? 0x00FF00 : 0xFF0000)
+        .setTimestamp();
+}
+
+// Fungsi pembantu untuk Tombol Panel
+function getControlPanelComponents() {
     const rowControl = new ActionRowBuilder()
         .addComponents(
             new ButtonBuilder()
@@ -64,7 +118,6 @@ async function sendControlPanel(target) {
                 .setStyle(ButtonStyle.Danger)
         );
 
-    // Baris 2: Tombol Pilihan Gems Langsung Klik
     const rowGems = new ActionRowBuilder()
         .addComponents(
             new ButtonBuilder()
@@ -77,50 +130,8 @@ async function sendControlPanel(target) {
                 .setStyle(ButtonStyle.Secondary)
         );
 
-    const embed = new EmbedBuilder()
-        .setTitle('🎮 GodBot Auto-Farming & Gems Control Panel')
-        .setDescription(`Status Bot: **${isFarmingActive ? '🟢 AKTIF (Jalan)' : '🔴 MATI (Berhenti)'}**\nGems Aktif Saat Ini: \`${activeGems}\``)
-        .setColor(isFarmingActive ? 0x00FF00 : 0xFF0000)
-        .setTimestamp();
-
-    if (target.reply) {
-        await target.reply({ embeds: [embed], components: [rowControl, rowGems] });
-    } else if (target.update) {
-        await target.update({ embeds: [embed], components: [rowControl, rowGems] });
-    }
+    return [rowControl, rowGems];
 }
-
-// Handle klik tombol interaktif
-client.on('interactionCreate', async (interaction) => {
-    if (!interaction.isButton()) return;
-
-    if (interaction.customId === 'start_farming') {
-        if (isFarmingActive) {
-            return interaction.reply({ content: '⚠️ Bot farming sudah dalam keadaan aktif!', ephemeral: true });
-        }
-        isFarmingActive = true;
-        await interaction.reply({ content: '🚀 Bot farming berhasil **DIALANKAN**!', ephemeral: true });
-        startFarmingCycle();
-        sendControlPanel(interaction);
-    } 
-    else if (interaction.customId === 'stop_farming') {
-        if (!isFarmingActive) {
-            return interaction.reply({ content: '⚠️ Bot farming memang sedang mati!', ephemeral: true });
-        }
-        isFarmingActive = false;
-        stopAllTimers();
-        await interaction.reply({ content: '🛑 Bot farming berhasil **DIHENTIKAN**!', ephemeral: true });
-        sendControlPanel(interaction);
-    }
-    else if (interaction.customId === 'gems_fable') {
-        activeGems = "guse 85 78 71 57";
-        await interaction.reply({ content: '✨ Gems berhasil diubah ke tier **Fable** (`guse 85 78 71 57`)!', ephemeral: true });
-    }
-    else if (interaction.customId === 'gems_rare') {
-        activeGems = "guse 81 74 67 53";
-        await interaction.reply({ content: '✨ Gems berhasil diubah ke tier **Rare** (`guse 81 74 67 53`)!', ephemeral: true });
-    }
-});
 
 // Fungsi utama rotasi channel & command
 async function startFarmingCycle() {
@@ -200,7 +211,7 @@ client.on('messageCreate', async (message) => {
     }
 });
 
-function stopAllTimers() {
+fn stopAllTimers() {
     if (activeInterval) clearTimeout(activeInterval);
     if (currentTimeout) clearTimeout(currentTimeout);
 }
