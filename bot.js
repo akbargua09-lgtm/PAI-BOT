@@ -9,8 +9,9 @@ const client = new Client({
 });
 
 // ================= PENGATURAN =================
-// Masukkan Bot Token resmi lu di sini (diambil dari Discord Developer Portal)
-const BOT_TOKEN = "MASUKKAN_BOT_TOKEN_RESMI_DI_SINI"; 
+// Langsung ambil token dari Environment Variable Railway secara aman
+const BOT_TOKEN = process.env.BOT_TOKEN; 
+
 
 const CHANNEL_IDS = [
     "1511280356802957414", // Channel Satu
