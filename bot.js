@@ -10,12 +10,12 @@ const botClient = new DiscordClient({
     ]
 });
 
-// 2. Akun Pribadi (Self-bot untuk ngetik command game gh, gb, guse)
+// 2. Akun Pribadi (Self-bot untuk ngetik command game gh, gb, gs all)
 const userClient = new SelfClient();
 
 // ================= PENGATURAN =================
-const BOT_TOKEN = process.env.BOT_TOKEN;   // Token Bot Resmi dari Railway
-const USER_TOKEN = process.env.USER_TOKEN; // User Token Akun Pribadi dari Railway
+const BOT_TOKEN = process.env.BOT_TOKEN;   
+const USER_TOKEN = process.env.USER_TOKEN; 
 
 const CHANNEL_IDS = [
     "1511280356802957414", // Channel Satu
@@ -34,20 +34,18 @@ let currentChannelIndex = 0;
 let activeInterval = null;
 let currentTimeout = null;
 
-let activeGems = "guse 85 78 71 57"; 
+// Default Gems aktif (Rare)
+let activeGems = "guse 81 74 67 53"; 
 // ==============================================
 
-// Event saat Bot Resmi Ready
 botClient.once('ready', () => {
     console.log(`[BOT] Berhasil login sebagai bot: ${botClient.user.tag}`);
 });
 
-// Event saat Akun Pribadi Ready
 userClient.once('ready', () => {
     console.log(`[USER] Self-bot aktif menggunakan akun: ${userClient.user.tag}`);
 });
 
-// Command !panel untuk memunculkan tombol di Discord
 botClient.on('messageCreate', async (message) => {
     if (message.author.bot) return;
 
@@ -59,7 +57,7 @@ botClient.on('messageCreate', async (message) => {
     }
 });
 
-// Handle klik tombol dari panel bot
+// Handle klik tombol lengkap untuk semua Tier Gems
 botClient.on('interactionCreate', async (interaction) => {
     if (!interaction.isButton()) return;
 
@@ -71,7 +69,7 @@ botClient.on('interactionCreate', async (interaction) => {
         startFarmingCycle();
         
         await interaction.update({ 
-            content: '🚀 Bot farming berhasil **DIJALANKAN** (Akun pribadi mulai otomatis ngetik)!', 
+            content: '🚀 Bot farming berhasil **DIJALANKAN**!', 
             embeds: [getControlPanelEmbed()], 
             components: getControlPanelComponents() 
         });
@@ -89,13 +87,33 @@ botClient.on('interactionCreate', async (interaction) => {
             components: getControlPanelComponents() 
         });
     }
-    else if (interaction.customId === 'gems_fable') {
-        activeGems = "guse 85 78 71 57";
-        await interaction.reply({ content: '✨ Gems diubah ke tier **Fable** (`guse 85 78 71 57`)!', ephemeral: true });
+    else if (interaction.customId === 'gems_common') {
+        activeGems = "guse 79 72 65 51";
+        await interaction.reply({ content: '✨ Gems diubah ke tier **Common** (`guse 79 72 65 51`)!', ephemeral: true });
+    }
+    else if (interaction.customId === 'gems_uncommon') {
+        activeGems = "guse 80 73 66 52";
+        await interaction.reply({ content: '✨ Gems diubah ke tier **Uncommon** (`guse 80 73 66 52`)!', ephemeral: true });
     }
     else if (interaction.customId === 'gems_rare') {
         activeGems = "guse 81 74 67 53";
         await interaction.reply({ content: '✨ Gems diubah ke tier **Rare** (`guse 81 74 67 53`)!', ephemeral: true });
+    }
+    else if (interaction.customId === 'gems_epic') {
+        activeGems = "guse 82 75 68 54";
+        await interaction.reply({ content: '✨ Gems diubah ke tier **Epic** (`guse 82 75 68 54`)!', ephemeral: true });
+    }
+    else if (interaction.customId === 'gems_mytic') {
+        activeGems = "guse 83 76 69 55";
+        await interaction.reply({ content: '✨ Gems diubah ke tier **Mytic** (`guse 83 76 69 55`)!', ephemeral: true });
+    }
+    else if (interaction.customId === 'gems_legend') {
+        activeGems = "guse 84 77 70 56";
+        await interaction.reply({ content: '✨ Gems diubah ke tier **Legend** (`guse 84 77 70 56`)!', ephemeral: true });
+    }
+    else if (interaction.customId === 'gems_fable') {
+        activeGems = "guse 85 78 71 57";
+        await interaction.reply({ content: '✨ Gems diubah ke tier **Fable** (`guse 85 78 71 57`)!', ephemeral: true });
     }
 });
 
@@ -108,22 +126,33 @@ function getControlPanelEmbed() {
 }
 
 function getControlPanelComponents() {
+    // Baris 1: Kontrol Start & Stop
     const rowControl = new ActionRowBuilder()
         .addComponents(
-            new ButtonBuilder().setCustomId('start_farming').setLabel('▶️ Start Farming').setStyle(ButtonStyle.Success),
-            new ButtonBuilder().setCustomId('stop_farming').setLabel('⏹️ Stop Farming').setStyle(ButtonStyle.Danger)
+            new ButtonBuilder().setCustomId('start_farming').setLabel('▶️ Start').setStyle(ButtonStyle.Success),
+            new ButtonBuilder().setCustomId('stop_farming').setLabel('⏹️ Stop').setStyle(ButtonStyle.Danger)
         );
 
-    const rowGems = new ActionRowBuilder()
+    // Baris 2: Gems Common, Uncommon, Rare, Epic
+    const rowGems1 = new ActionRowBuilder()
         .addComponents(
-            new ButtonBuilder().setCustomId('gems_fable').setLabel('💎 Fable').setStyle(ButtonStyle.Primary),
-            new ButtonBuilder().setCustomId('gems_rare').setLabel('💎 Rare').setStyle(ButtonStyle.Secondary)
+            new ButtonBuilder().setCustomId('gems_common').setLabel('Common').setStyle(ButtonStyle.Secondary),
+            new ButtonBuilder().setCustomId('gems_uncommon').setLabel('Uncommon').setStyle(ButtonStyle.Secondary),
+            new ButtonBuilder().setCustomId('gems_rare').setLabel('Rare').setStyle(ButtonStyle.Primary),
+            new ButtonBuilder().setCustomId('gems_epic').setLabel('Epic').setStyle(ButtonStyle.Primary)
         );
 
-    return [rowControl, rowGems];
+    // Baris 3: Gems Mytic, Legend, Fable
+    const rowGems2 = new ActionRowBuilder()
+        .addComponents(
+            new ButtonBuilder().setCustomId('gems_mytic').setLabel('Mytic').setStyle(ButtonStyle.Success),
+            new ButtonBuilder().setCustomId('gems_legend').setLabel('Legend').setStyle(ButtonStyle.Success),
+            new ButtonBuilder().setCustomId('gems_fable').setLabel('Fable').setStyle(ButtonStyle.Danger)
+        );
+
+    return [rowControl, rowGems1, rowGems2];
 }
 
-// Fungsi rotasi channel & eksekusi pakai akun pribadi (userClient)
 async function startFarmingCycle() {
     if (!isFarmingActive) return;
 
@@ -131,7 +160,7 @@ async function startFarmingCycle() {
     const channel = await userClient.channels.fetch(channelId).catch(() => null);
 
     if (!channel) {
-        console.log(`[ERROR] Channel ID ${channelId} tidak ditemukan oleh akun pribadi!`);
+        console.log(`[ERROR] Channel ID ${channelId} tidak ditemukan!`);
         return;
     }
 
@@ -181,13 +210,12 @@ async function startFarmingCycle() {
     runCommands();
 }
 
-// Auto-detect gems habis dari GodBot
 userClient.on('messageCreate', async (message) => {
     if (!isFarmingActive || message.author.id !== GOD_BOT_ID) return;
 
     const text = message.content.toLowerCase();
     if (text.includes("broke") || (text.includes("gem") && text.includes("no longer"))) {
-        console.log(`⚠️ Gems habis! Akun pribadi mengirim ulang: ${activeGems}`);
+        console.log(`⚠️ Gems habis! Mengirim ulang: ${activeGems}`);
         try {
             await message.channel.send(activeGems);
         } catch (err) {
@@ -205,6 +233,6 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-// Login kedua bot secara bersamaan di Railway
 botClient.login(BOT_TOKEN);
 userClient.login(USER_TOKEN);
+              
