@@ -8,6 +8,6 @@
   },
   "dependencies": {
     "discord.js": "^14.14.1",
-    "discord.js-selfbot-v13": "^13.14.2"
+    "discord.js-selfbot-v13": "latest"
   }
 }
